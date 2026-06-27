@@ -39,14 +39,7 @@ export function MemberDetail({ member, onBack }: Props) {
   ];
 
   return (
-    <div className="w-full h-full relative overflow-hidden flex font-sans bg-[#FCFF2E]">
-      {/* Background Radial Gradients & Grid Pattern */}
-      <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle at top right, #FBEC24 0%, transparent 70%), radial-gradient(circle at bottom right, #FFFF73 0%, transparent 70%)'
-        }}
-      />
+    <div className="w-full h-full relative overflow-hidden flex font-sans p4-background">
       <GridPattern />
 
       {/* Far Left - Vertical Colored Stripes */}

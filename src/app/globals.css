@@ -24,3 +24,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.p4-background {
+  background: radial-gradient(circle at top right, hsl(58, 99%, 57%) 0%, transparent 70%),
+    radial-gradient(circle at bottom left, hsl(53, 90%, 54%) 0%, transparent 70%),
+    hsl(52, 100%, 50%);
+}

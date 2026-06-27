@@ -120,10 +120,7 @@ export default function PersonaStatusScreen() {
   return (
     <div className="h-screen w-screen bg-[#141414] p-[6px] overflow-hidden font-sans">
       <div 
-        className="w-full h-full rounded-[12px] overflow-hidden relative flex text-black selection:bg-black selection:text-white"
-        style={{
-          background: 'radial-gradient(circle at top right, #FBEC24 0%, transparent 70%), radial-gradient(circle at bottom right, #FFFF73 0%, transparent 70%), #FCFF2E'
-        }}
+        className="w-full h-full rounded-[12px] overflow-hidden relative flex text-black selection:bg-black selection:text-white p4-background"
       >
       {/* Background Elements */}
       
