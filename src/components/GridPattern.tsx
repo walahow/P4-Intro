@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 function GridBlock({ x, y, size }: { x: number, y: number, size: number }) {
   const [level, setLevel] = useState<0 | 1 | 2>(0);
@@ -62,26 +62,54 @@ function GridBlock({ x, y, size }: { x: number, y: number, size: number }) {
   );
 }
 
-export function GridPattern() {
+export function GridPattern({ variant = "main" }: { variant?: "main" | "detail" }) {
   const [blocks, setBlocks] = useState<{ id: string, x: number, y: number }[]>([]);
-
-  const size = 140;
-  const gap = -2; // Maintains a consistent gap so they never overlap
-  const boxSize = size - gap;
-  const radius = 25;
+  const [winSize, setWinSize] = useState({ w: 1536, h: 864 });
+  const [scale, setScale] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [gridPixelWidth, setGridPixelWidth] = useState(0);
 
   useEffect(() => {
-    const newBlocks = [];
-    const cols = Math.ceil(3000 / size);
-    const rows = Math.ceil(2000 / size);
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      setGridPixelWidth(entries[0].contentRect.width);
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWinSize({ w: window.innerWidth, h: window.innerHeight });
+      const vwScale = window.innerWidth / 1536;
+      const vhScale = window.innerHeight / 864;
+      setScale(window.innerWidth / window.innerHeight > 1536 / 864 ? vhScale : vwScale);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const size = 112 * scale;
+  const gap = -1.5 * scale;
+  const boxSize = size - gap;
+  const radius = 20 * scale;
+
+  useEffect(() => {
+    if (size === 0 || gridPixelWidth === 0) return;
+    const newBlocks: { id: string, x: number, y: number }[] = [];
+    const cols = Math.ceil(gridPixelWidth / size) + 1;
+    const rows = Math.ceil(winSize.h / size) + 2;
 
     for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rows; j++) {
-        const normX = (i * size) / 1920;
-        const normY = (j * size) / 1080;
+        // Align blocks to the right edge so the rightmost block is never cut.
+        // i = 0 is the rightmost column.
+        const blockX = gridPixelWidth - boxSize - i * size;
+        const blockY = j * size + gap / 2;
 
-        // Measure distance to the right edge instead of just the top corner
-        const distToRight = 1 - normX;
+        // Distance from right edge (normalized 0 to 1)
+        const distToRight = (i * size) / gridPixelWidth;
 
         // 100% packed on the right edge, minimum 40% packed on the left
         const prob = Math.max(0.4, 1.0 - distToRight * 0.6);
@@ -89,24 +117,40 @@ export function GridPattern() {
         if (Math.random() < prob) {
           newBlocks.push({
             id: `${i}-${j}`,
-            x: i * size + gap / 2,
-            y: j * size + gap / 2
+            x: blockX,
+            y: blockY
           });
         }
       }
     }
     setBlocks(newBlocks);
-  }, []);
+  }, [winSize, size, gap, gridPixelWidth, boxSize]);
+
+  const mainStripeTotalWidth = 168;
+  const prPadding = winSize.w * 0.45 * 0.04;
+  // Subtract 12px to account for the parent container's padding, matching the exact SVG coordinates
+  const rightOffset = variant === "main" ? Math.max(0, prPadding + mainStripeTotalWidth - 12) : 0;
 
   return (
     <div
-      className="absolute right-0 top-0 w-[80%] h-full pointer-events-none z-0"
+      ref={containerRef}
+      className="absolute top-0 h-full pointer-events-none z-0"
       style={{
+        left: 0,
+        right: 0,
         maskImage: 'linear-gradient(to right, transparent 0%, black 50%)',
         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 50%)'
       }}
     >
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <svg 
+        width="100%" 
+        height="100%" 
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          transform: `translateX(-${rightOffset}px)`,
+          transition: 'transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1)'
+        }}
+      >
         {blocks.map(block => (
           <GridBlock
             key={block.id}
